@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MDRG Save Editor Web</title>
+    <style>
+        :root {
+            --bg-main: #090e17;
+            --bg-card: #151f32;
+            --bg-input: #1e293b;
+            --accent-blue: #3b82f6;
+            --accent-blue-hover: #2563eb;
+            --text-white: #ffffff;
+            --text-muted: #64748b;
+            --text-green: #10b981;
+            --text-red: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-white);
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 1000px;
+        }
+
+        /* Custom Scrollbar Style agar UI Terlihat Premium & Clean */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #24334d;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-blue);
+        }
+
+        /* Header & Top Buttons */
+        .header-title {
+            font-size: 1.6rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .action-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .btn-primary {
+            background-color: var(--accent-blue);
+            color: var(--text-white);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: background 0.2s;
+            flex: 1;
+            text-align: center;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--accent-blue-hover);
+        }
+
+        .file-status {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 24px;
+        }
+
+        /* Save Slots Header & Sub-Tabs Layout (New) */
+        .slots-header-area {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+        }
+
+        .slot-sub-tabs {
+            display: flex;
+            gap: 4px;
+            background-color: var(--bg-card);
+            padding: 4px;
+            border-radius: 8px;
+            border: 1px solid #24334d;
+        }
+
+        .slot-tab-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            padding: 6px 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .slot-tab-btn.active {
+            background-color: var(--accent-blue);
+            color: var(--text-white);
+        }
+
+        /* Slot Buttons Container with Fixed Scroll (New) */
+        .slot-selector-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 8px;
+            margin-bottom: 20px;
+            max-height: 115px; /* Membatasi tinggi agar memicu scrollbar */
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .slot-select-btn {
+            background-color: var(--bg-card);
+            border: 1px solid #24334d;
+            color: var(--text-white);
+            padding: 10px 8px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            text-align: center;
+        }
+        .slot-select-btn.active {
+            background-color: var(--accent-blue);
+            border-color: var(--text-white);
+        }
+
+        /* Dashboard Overview Cards */
+        .overview-card {
+            background-color: var(--bg-card);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .card-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .card-value {
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        /* Navigation Tabs System */
+        .tabs-container {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            margin-top: 20px;
+            margin-bottom: 12px;
+            padding-bottom: 4px;
+            scrollbar-width: none;
+        }
+        .tabs-container::-webkit-scrollbar {
+            display: none;
+        }
+
+        .tab-btn {
+            background-color: var(--bg-card);
+            color: var(--text-white);
+            border: none;
+            padding: 10px 18px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .tab-btn.active {
+            background-color: var(--accent-blue);
+        }
+
+        /* Search Input */
+        .search-box {
+            width: 100%;
+            background-color: var(--text-white);
+            color: #000000;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 0.95rem;
+            margin-bottom: 16px;
+            outline: none;
+        }
+
+        /* Workspace Content Box */
+        .workspace-box {
+            background-color: var(--bg-card);
+            border-radius: 12px;
+            padding: 20px;
+            min-height: 200px;
+            color: var(--text-white);
+        }
+
+        .empty-state {
+            color: var(--text-white);
+            font-size: 1rem;
+        }
+
+        /* Fields Grid Area & Scroll Modifier (New) */
+        .fields-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+
+        /* Ditambahkan khusus untuk membatasi tinggi tab panjang agar tidak memakan satu halaman penuh */
+        .fields-grid.scrollable-workspace {
+            max-height: 380px; 
+            overflow-y: auto;
+            padding-right: 6px;
+        }
+
+        /* Field Input Styling */
+        .field-row {
+            background-color: #0f172a;
+            border: 1px solid #1e293b;
+            border-radius: 8px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .field-row-checkbox {
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 12px;
+        }
+
+        .field-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .field-input {
+            background-color: var(--bg-input);
+            color: var(--text-white);
+            border: 1px solid #334155;
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-size: 0.95rem;
+            outline: none;
+            width: 100%;
+        }
+
+        .time-inputs-inline {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .time-sub-input {
+            background-color: var(--bg-input);
+            color: var(--text-white);
+            border: 1px solid #334155;
+            border-radius: 6px;
+            padding: 6px;
+            font-size: 0.9rem;
+            width: 65px;
+            text-align: center;
+        }
+
+        .time-label-inline {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        /* Flags & Raw Textarea Elements */
+        .flag-box-section {
+            border: 1px solid #24334d;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 14px;
+            background: #0d1527;
+        }
+        .flag-box-title {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--accent-blue);
+            margin-bottom: 10px;
+        }
+        .flag-list-scroll {
+            max-height: 220px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            padding-right: 4px;
+        }
+        .flag-item-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--bg-input);
+            padding: 8px 10px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+        }
+        .flag-btn-action {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+        }
+        .custom-flag-wrapper {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        .raw-textarea {
+            width: 100%;
+            height: 320px;
+            background-color: #0f172a;
+            color: #38bdf8;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            font-family: monospace;
+            padding: 10px;
+            font-size: 0.85rem;
+            resize: vertical;
+            outline: none;
+        }
+        
+        
+                /* Premium Confirmation Modal Overlay */
+        .confirm-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(5, 8, 14, 0.8);
+            display: none; /* Tersembunyi default */
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            backdrop-filter: blur(4px);
+            transition: all 0.2s ease;
+        }
+
+        .confirm-box {
+            background: var(--bg-card);
+            border: 1px solid #1e293b;
+            padding: 22px;
+            border-radius: 14px;
+            width: 85%;
+            max-width: 320px;
+            text-align: center;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6);
+            animation: popUp 0.2s ease-out;
+        }
+
+        @keyframes popUp {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .confirm-msg {
+            font-size: 0.95rem;
+            color: var(--text-white);
+            line-height: 1.5;
+            margin-bottom: 22px;
+            word-break: break-word;
+        }
+
+        .confirm-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .btn-confirm-yes {
+            background: var(--text-red);
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+            flex: 1;
+        }
+        .btn-confirm-yes:hover {
+            background: #dc2626;
+        }
+
+        .btn-confirm-no {
+            background: var(--bg-input);
+            color: var(--text-muted);
+            border: 1px solid #334155;
+            padding: 10px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            flex: 1;
+        }
+        .btn-confirm-no:hover {
+            color: var(--text-white);
+            background: #334155;
+        }
+        
+        .checkbox-list-box {
+            max-height: 220px;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+            background-color: var(--input-bg);
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 5px;
+        }
+
+        .checkbox-list-box label {
+            display: block;
+            padding: 4px 0;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .checkbox-list-box input[type="checkbox"] {
+            margin-right: 8px;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <div class="header-title">💾 MDRG Save Editor</div>
+    <div class="action-bar">
+        <button class="btn-primary" onclick="triggerFileInput()">Open Save</button>
+        <button class="btn-primary" id="saveBtn" onclick="exportJsonFile()" disabled>Save JSON</button>
+        <input type="file" id="fileInput" accept=".mdrg" style="display: none;" />
+    </div>
+    <div class="file-status" id="fileStatus">No file loaded</div>
+
+    <div class="slots-header-area">
+        <div class="section-title">Save Slots</div>
+        <div class="slot-sub-tabs" id="slotSubTabsArea" style="display: none;">
+            <button class="slot-tab-btn active" id="slotTabNormal" onclick="changeSlotCategory('normal')">Normal</button>
+            <button class="slot-tab-btn" id="slotTabAuto" onclick="changeSlotCategory('auto')">Auto</button>
+        </div>
+    </div>
+    
+    <div class="slot-selector-container" id="slotSelector">
+        </div>
+
+    <div class="overview-card">
+        <span class="card-label">Money</span>
+        <span class="card-value" id="overviewMoney">-</span>
+    </div>
+    <div class="overview-card">
+        <span class="card-label">Followers</span>
+        <span class="card-value" id="overviewFollowers">-</span>
+    </div>
+    <div class="overview-card">
+        <span class="card-label">Subscribers</span>
+        <span class="card-value" id="overviewSubscribers">-</span>
+    </div>
+    <div class="overview-card">
+        <span class="card-label">Play Time</span>
+        <span class="card-value" id="overviewPlayTime">-</span>
+    </div>
+    <div class="overview-card">
+        <span class="card-label">Active Flags</span>
+        <span class="card-value" id="overviewFlags">-</span>
+    </div>
+
+    <div class="tabs-container">
+        <button class="tab-btn active" onclick="switchTab('anon', this)">Anon Info</button>
+        <button class="tab-btn" onclick="switchTab('bot', this)">Bot Info</button>
+        <button class="tab-btn" onclick="switchTab('sex', this)">Sex Info</button>
+        <button class="tab-btn" onclick="switchTab('events', this)">Events</button>
+        <button class="tab-btn" onclick="switchTab('websites', this)">Websites</button>
+        <button class="tab-btn" onclick="switchTab('achievement', this)">Achievement</button>
+        <button class="tab-btn" onclick="switchTab('flags', this)">Flags</button>
+        <button class="tab-btn" onclick="switchTab('raw', this)">Raw JSON</button>
+    </div>
+
+    <input type="text" class="search-box" placeholder="Search field..." id="searchField" oninput="filterFields()" />
+
+    <div class="workspace-box" id="workspace">
+        <div class="empty-state" id="emptyStateMsg">Load save slot first.</div>
+        <div class="fields-grid" id="fieldsContainer" style="display: none;"></div>
+    </div>
+    
+    <div id="confirmOverlay" class="confirm-overlay">
+        <div class="confirm-box">
+            <div id="confirmMsg" class="confirm-msg">Apakah Anda yakin ingin menghapus item ini?</div>
+            <div class="confirm-buttons">
+                <button id="confirmNoBtn" class="btn-confirm-no">No</button>
+                <button id="confirmYesBtn" class="btn-confirm-yes">Yes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="module" src="main_script.js"></script>
+</body>
+</html>
